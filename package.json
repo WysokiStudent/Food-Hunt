@@ -1,0 +1,30 @@
+{
+  "name": "food-hunt",
+  "version": "1.0.0",
+  "description": "A simple 2D game where the hero catches food falling from the ceiling",
+  "private": true,
+  "dependencies": {
+    "@types/pixi.js": "^4.8.0",
+    "http-server": "^0.11.1",
+    "pixi.js": "^4.8.1",
+    "ts-loader": "^4.4.2",
+    "typescript": "^2.9.2",
+    "webpack": "^4.15.1",
+    "webpack-cli": "^3.0.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p ./",
+    "bundle": "webpack --config webpack.config.js --mode development",
+    "serve": "http-server",
+    "start": "npm run build && npm run bundle && npm run serve"
+  },
+  "keywords": [
+    "pixi",
+    "http-server",
+    "typescript"
+  ],
+  "author": "Aleksander Bobiński",
+  "license": "MIT"
+}
