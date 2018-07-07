@@ -1,30 +1,35 @@
 import * as PIXI from 'pixi.js';
 import { Hero }  from "./Hero";
 import { HeroTextures } from './HeroTextures';
+import { Key } from './Key';
 
 export class FoodHunter {
   app!: PIXI.Application;
   hero!: Hero;
+  updateState: (delta: number) => void = this.play;
 
   constructor() {
     this.constructApplication();
     this.constructHero();
   }
 
-  constructApplication(): void {
-    this.app = new PIXI.Application();
+  startGameLoop(): void {
+    this.app.ticker.add(
+      (delta) => this.gameLoop(delta)
+    )
+  }
+
+  private constructApplication(): void {
+    this.app = new PIXI.Application(800, 600);
     document.body.appendChild(this.app.view);
 
     this.app.renderer.backgroundColor = 0xFFFFFF;
     }
 
-  constructHero(): void {
+  private constructHero(): void {
     this.hero = new Hero(this.loadHeroTextures());
     this.app.stage.addChild(this.hero);
-  }
-
-  play(): void {
-    this.hero.play();
+    this.assignMovementKeysToHero();
   }
 
   private loadTextures(
@@ -65,4 +70,52 @@ export class FoodHunter {
     textures.setArray(texturesArray);
     return textures;
   }
+
+  private assignMovementKeysToHero(): void {
+    let left = this.keyboard(37), right = this.keyboard(39);
+
+    left.press = () => {
+      this.hero.runLeft();
+      this.hero.vx = -5;
+      this.hero.vy = 0;
+    }
+
+    left.release = () => {
+      if(!right.isDown && this.hero.vy === 0) {
+        this.hero.idle();
+        this.hero.vx = 0;
+      }
+    }
+
+    right.press = () => {
+      this.hero.runRight();
+      this.hero.vx = 5;
+      this.hero.vy = 0;
+    }
+
+    right.release = () => {
+      if(!left.isDown && this.hero.vy === 0) {
+        this.hero.idle();
+        this.hero.vx = 0;
+      }
+    }
+  }
+
+  private gameLoop(delta: number): void {
+    this.updateState(delta);
+  }
+
+  private play(delta: number): void {
+    this.hero.x += this.hero.vx;
+    this.hero.y += this.hero.vy;
+  }
+
+  private keyboard(keyCode: number): Key {
+    let key: Key = new Key(keyCode);
+
+    window.addEventListener("keydown", key.downHandler.bind(key), false);
+    window.addEventListener("keyup", key.upHandler.bind(key), false);
+    return key;
+  }
+
 }

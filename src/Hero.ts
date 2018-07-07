@@ -3,6 +3,8 @@ import { HeroTextures } from './HeroTextures';
 
 export class Hero extends PIXI.extras.AnimatedSprite {
   animationSpeed = 0.15;
+  vx: number = 0;
+  vy: number = 0;
 
   heroTextures: HeroTextures;
 
@@ -39,7 +41,6 @@ export class Hero extends PIXI.extras.AnimatedSprite {
   private changeTexture(textures: PIXI.Texture[]): void {
     if(this.textures !== textures) {
       this.textures = textures;
-      this.onLoop = this.idle;
       this.play();
     }
   }

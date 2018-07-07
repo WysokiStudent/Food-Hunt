@@ -6,6 +6,8 @@ export class HeroTextures {
   sliceRight: PIXI.Texture[] = [];
   sliceUp: PIXI.Texture[] = [];
 
+  constructor() {}
+
   getArray(): Array<PIXI.Texture[]> {
     let array: Array<PIXI.Texture[]> = [];
     array.push(this.idle);
@@ -26,6 +28,4 @@ export class HeroTextures {
     this.sliceRight = textures[4];
     this.sliceUp = textures[5];
   }
-
-  constructor() {}
 }
