@@ -108,6 +108,8 @@ export class FoodHunter {
   private play(delta: number): void {
     this.hero.x += this.hero.vx;
     this.hero.y += this.hero.vy;
+
+    this.contain(this.hero, this.app.screen);
   }
 
   private keyboard(keyCode: number): Key {
@@ -117,5 +119,39 @@ export class FoodHunter {
     window.addEventListener("keyup", key.upHandler.bind(key), false);
     return key;
   }
+
+  private contain(
+    sprite: PIXI.Sprite,
+    container: {
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    }
+  ): string | undefined {
+    let collision: string | undefined = undefined;
+
+    if(sprite.x < container.x) {
+      sprite.x = container.x;
+      collision = "left";
+    }
+
+    if(sprite.y < container.y) {
+      sprite.y = container.y;
+      collision = "top";
+    }
+
+    if(sprite.x + sprite.width > container.width) {
+      sprite.x = container.width - sprite.width;
+      collision = "right";
+    }
+
+    if(sprite.y + sprite.height > container.height) {
+      sprite.y = container.height - sprite.height;
+      collision = "bottom";
+    }
+
+    return collision;
+}
 
 }
