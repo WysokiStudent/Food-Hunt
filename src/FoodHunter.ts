@@ -3,9 +3,11 @@ import { Hero }  from "./Hero";
 import { HeroTextures } from './HeroTextures';
 import { Key } from './Key';
 import { Food } from './Food';
+import { HealthBar } from './HealthBar';
 
 export class FoodHunter {
   app!: PIXI.Application;
+  healthBar: HealthBar;
   hero?: Hero;
   food?: Food;
 
@@ -18,6 +20,11 @@ export class FoodHunter {
     this.constructApplication();
     this.constructFood();
     this.constructHero();
+    this.healthBar = new HealthBar(
+      this.app.view.width / 4,
+      this.app.view.height / 20
+    )
+    this.app.stage.addChild(this.healthBar);
   }
 
   startGameLoop(): void {
@@ -169,6 +176,10 @@ export class FoodHunter {
           if(this.food && collision === "bottom") {
             this.food.removeChild(concreteFood);
             this.food.removeConcreteFood(concreteFood);
+            this.healthBar.decreaseHealth();
+            if(this.healthBar.healthLeft === 0) {
+              console.log("The game is lost.")
+            }
           }
         }
       );
