@@ -8,6 +8,8 @@ import { ScoreBar } from './ScoreBar';
 
 export class FoodHunter {
   app!: PIXI.Application;
+  gameScene: PIXI.Container = new PIXI.Container();
+  gameOverScene: PIXI.Container = new PIXI.Container();
   healthBar: HealthBar;
   scoreBar: ScoreBar;
   hero?: Hero;
@@ -17,6 +19,7 @@ export class FoodHunter {
 
   constructor() {
     this.constructApplication();
+    this.constructGameOverScene();
     this.constructFood();
     this.constructHero();
     this.healthBar = new HealthBar(
@@ -24,10 +27,10 @@ export class FoodHunter {
       this.app.view.height / 20
     )
     this.healthBar.position.set(this.app.view.width - this.healthBar.width, 0);
-    this.app.stage.addChild(this.healthBar);
+    this.gameScene.addChild(this.healthBar);
 
     this.scoreBar = new ScoreBar()
-    this.app.stage.addChild(this.scoreBar);
+    this.gameScene.addChild(this.scoreBar);
   }
 
   startGameLoop(): void {
@@ -42,6 +45,11 @@ export class FoodHunter {
         }
       }
     );
+    this.app.stage = this.gameScene;
+  }
+
+  stopGameLoop(): void {
+    this.app.ticker.stop();
   }
 
   generateFallingFood(): void {
@@ -57,11 +65,20 @@ export class FoodHunter {
     this.app.renderer.backgroundColor = 0xFFFFFF;
     }
 
+  private constructGameOverScene(): void {
+    let message: PIXI.Text = new PIXI.Text("Game Over");
+    message.position.set(
+      this.app.view.width / 2 - message.width / 2,
+      this.app.view.height / 2 - message.height / 2,
+    )
+    this.gameOverScene.addChild(message);
+  }
+
   private constructHero(): void {
     this.hero = new Hero(this.loadHeroTextures());
     this.hero.play();
     this.hero.y = this.app.view.height - this.hero.height;
-    this.app.stage.addChild(this.hero);
+    this.gameScene.addChild(this.hero);
     this.assignMovementKeysToHero();
   }
 
@@ -75,7 +92,7 @@ export class FoodHunter {
           this.food = new Food(textures);
         }
         if(this.food) {
-          this.app.stage.addChild(this.food);
+          this.gameScene.addChild(this.food);
         }
       }
     );
@@ -181,7 +198,8 @@ export class FoodHunter {
             this.food.removeConcreteFood(concreteFood);
             this.healthBar.decreaseHealth();
             if(this.healthBar.healthLeft === 0) {
-              console.log("The game is lost.")
+              this.app.stage = this.gameOverScene;
+              this.stopGameLoop();
             }
           }
         }
