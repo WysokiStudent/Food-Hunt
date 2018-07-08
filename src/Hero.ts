@@ -12,7 +12,7 @@ export class Hero extends PIXI.extras.AnimatedSprite {
   constructor(heroTextures: HeroTextures) {
     super(heroTextures.idle);
     this.heroTextures = heroTextures;
-    this.onLoop = this.idle;
+    this.onLoop = this.softlyResetAnimation;
   }
 
   idle(): void {
@@ -59,6 +59,16 @@ export class Hero extends PIXI.extras.AnimatedSprite {
     if(this.textures !== textures) {
       this.textures = textures;
       this.play();
+    }
+  }
+
+  private softlyResetAnimation(): void {
+    if(this.vx === 0 && this.vy === 0) {
+      this.idle();
+    } else if(this.vx > 0) {
+      this.runRight();
+    } else {
+      this.runLeft();
     }
   }
 }
