@@ -28,15 +28,21 @@ export class Hero extends PIXI.extras.AnimatedSprite {
   }
 
   sliceLeft(): void {
-    this.changeTexture(this.heroTextures.sliceLeft);
+    if(this.vx < 0) {
+      this.changeTexture(this.heroTextures.sliceLeft);
+    }
   }
 
   sliceRight(): void {
-    this.changeTexture(this.heroTextures.sliceRight);
+    if(this.vx > 0) {
+      this.changeTexture(this.heroTextures.sliceRight);
+    }
   }
 
   sliceUp(): void {
-    this.changeTexture(this.heroTextures.sliceUp);
+    if(this.vx === 0) {
+      this.changeTexture(this.heroTextures.sliceUp);
+    }
   }
 
   advance(): void {

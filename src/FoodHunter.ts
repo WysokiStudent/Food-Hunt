@@ -207,7 +207,6 @@ export class FoodHunter {
     }
 
     if(this.food) {
-      let hit: boolean = false;
       this.food.fallingFoods.forEach(
         (concreteFood) => {
           if(this.hero) {
@@ -215,7 +214,14 @@ export class FoodHunter {
               if(this.food) {
                 this.food.removeChild(concreteFood);
                 this.food.removeConcreteFood(concreteFood);
-                this.hero.sliceUp();
+                if(concreteFood.y < this.hero.y + (this.hero.height / 8) &&
+                  this.hero.vx === 0) {
+                  this.hero.sliceUp();
+                } else if(concreteFood.x < this.hero.x + (this.hero.width / 2)) {
+                  this.hero.sliceLeft();
+                } else {
+                  this.hero.sliceRight();
+                }
                 this.scoreBar.increaseScore();
               }
             }
