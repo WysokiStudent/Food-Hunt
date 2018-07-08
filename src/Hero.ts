@@ -11,6 +11,7 @@ export class Hero extends PIXI.extras.AnimatedSprite {
   constructor(heroTextures: HeroTextures) {
     super(heroTextures.idle);
     this.heroTextures = heroTextures;
+    this.onLoop = this.idle;
   }
 
   idle(): void {

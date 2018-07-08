@@ -9,6 +9,9 @@ export class FoodHunter {
   hero?: Hero;
   food?: Food;
 
+  score: number = 0;
+  lives: number = 10;
+
   updateState: (delta: number) => void = this.play;
 
   constructor() {
@@ -20,10 +23,10 @@ export class FoodHunter {
   startGameLoop(): void {
     this.app.ticker
     .add(
-      (delta) => this.gameLoop(delta)
+      (delta: number): void => this.gameLoop(delta)
     )
     .add(
-      (delta) => {
+      (delta: number): void => {
         if(Math.floor(Math.random() * 100) >= 98) {
           this.generateFallingFood();
         }
@@ -46,6 +49,8 @@ export class FoodHunter {
 
   private constructHero(): void {
     this.hero = new Hero(this.loadHeroTextures());
+    this.hero.play();
+    this.hero.y = this.app.view.height - this.hero.height;
     this.app.stage.addChild(this.hero);
     this.assignMovementKeysToHero();
   }
@@ -156,18 +161,36 @@ export class FoodHunter {
     if(this.food) {
       this.food.advance();
       this.food.fallingFoods.forEach(
-        (sprite) => {
+        (concreteFood) => {
           let collision: string | undefined = this.contain(
-            sprite,
+            concreteFood,
             this.app.screen
           );
           if(this.food && collision === "bottom") {
-            this.food.removeChild(sprite);
-            this.food.removeFallingFood(sprite);
+            this.food.removeChild(concreteFood);
+            this.food.removeConcreteFood(concreteFood);
           }
         }
       );
     }
+
+    if(this.food) {
+      let hit: boolean = false;
+      this.food.fallingFoods.forEach(
+        (concreteFood) => {
+          if(this.hero) {
+            if(this.hitTestSprite(this.hero, concreteFood)) {
+              if(this.food) {
+                this.food.removeChild(concreteFood);
+                this.food.removeConcreteFood(concreteFood);
+                this.hero.sliceUp();
+              }
+            }
+          }
+        }
+      )
+    }
+
   }
 
   private keyboard(keyCode: number): Key {
@@ -212,4 +235,37 @@ export class FoodHunter {
     return collision;
   }
 
+  private hitTestSprite(
+    r1: PIXI.Sprite,
+    r2: PIXI.Sprite):  boolean {
+    let hit: boolean = false;
+
+    let r1centerX: number = r1.x + r1.width / 2;
+    let r1centerY: number = r1.y + r1.height / 2;
+    let r2centerX: number = r2.x + r2.width / 2;
+    let r2centerY: number = r2.y + r2.height / 2;
+
+    let r1halfWidth: number = r1.width / 2;
+    let r1halfHeight: number = r1.height / 2;
+    let r2halfWidth: number = r2.width / 2;
+    let r2halfHeight: number = r2.height / 2;
+
+    let vx: number = r1centerX - r2centerX;
+    let vy: number = r1centerY - r2centerY;
+
+    let combinedHalfWidths: number = r1halfWidth + r2halfWidth;
+    let combinedHalfHeights: number = r1halfHeight + r2halfHeight;
+
+    if (Math.abs(vx) < combinedHalfWidths) {
+      if (Math.abs(vy) < combinedHalfHeights) {
+        hit = true;
+      } else {
+        hit = false;
+      }
+    } else {
+      hit = false;
+    }
+
+    return hit;
+  }
 }

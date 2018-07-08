@@ -36,7 +36,7 @@ export class Food extends PIXI.particles.ParticleContainer {
     return randomTexture;
   }
 
-  removeFallingFood(sprite: PIXI.Sprite): void {
+  removeConcreteFood(sprite: PIXI.Sprite): void {
     let index = this.fallingFoods.indexOf(sprite);
     if(index > -1) {
       this.fallingFoods.splice(index, 1);
