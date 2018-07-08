@@ -38,6 +38,11 @@ export class Hero extends PIXI.extras.AnimatedSprite {
     this.changeTexture(this.heroTextures.sliceUp);
   }
 
+  advance(): void {
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+
   private changeTexture(textures: PIXI.Texture[]): void {
     if(this.textures !== textures) {
       this.textures = textures;

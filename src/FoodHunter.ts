@@ -2,25 +2,43 @@ import * as PIXI from 'pixi.js';
 import { Hero }  from "./Hero";
 import { HeroTextures } from './HeroTextures';
 import { Key } from './Key';
+import { Food } from './Food';
 
 export class FoodHunter {
   app!: PIXI.Application;
-  hero!: Hero;
+  hero?: Hero;
+  food?: Food;
+
   updateState: (delta: number) => void = this.play;
 
   constructor() {
     this.constructApplication();
+    this.constructFood();
     this.constructHero();
   }
 
   startGameLoop(): void {
-    this.app.ticker.add(
+    this.app.ticker
+    .add(
       (delta) => this.gameLoop(delta)
     )
+    .add(
+      (delta) => {
+        if(Math.floor(Math.random() * 100) >= 98) {
+          this.generateFallingFood();
+        }
+      }
+    );
+  }
+
+  generateFallingFood(): void {
+    if(this.food) {
+      this.food.generateFallingFood(this.app.view.width);
+    }
   }
 
   private constructApplication(): void {
-    this.app = new PIXI.Application(800, 600);
+    this.app = new PIXI.Application(300, 400);
     document.body.appendChild(this.app.view);
 
     this.app.renderer.backgroundColor = 0xFFFFFF;
@@ -31,6 +49,22 @@ export class FoodHunter {
     this.app.stage.addChild(this.hero);
     this.assignMovementKeysToHero();
   }
+
+  private constructFood(): void {
+    let foodLocation = "graphics/FreePixelFood/Food.json";
+    this.app.loader.add(foodLocation).load(
+      () => {
+        let textures: PIXI.loaders.TextureDictionary | undefined =
+        this.app.loader.resources[foodLocation].textures;
+        if(textures) {
+          this.food = new Food(textures);
+        }
+        if(this.food) {
+          this.app.stage.addChild(this.food);
+        }
+      }
+    );
+}
 
   private loadTextures(
     location: string,
@@ -49,13 +83,13 @@ export class FoodHunter {
   private loadHeroTextures(): HeroTextures {
     let imageLocation: string = "graphics/hero/";
     let imageSufix: string = ".png";
-    let imageFrames: {frameName: string, frames: number}[] = [
+    let imageFrames: { frameName: string, frames: number }[] = [
       { frameName: "knight iso char_idle_", frames: 4 },
       { frameName: "knight iso char_run left_", frames: 6 },
       { frameName: "knight iso char_run right_", frames: 6 },
       { frameName: "knight iso char_slice left_", frames: 3 },
       { frameName: "knight iso char_slice right_", frames: 3 },
-      { frameName: "knight iso char_slice up_", frames: 3}
+      { frameName: "knight iso char_slice up_", frames: 3 }
     ]
     let textures: HeroTextures = new HeroTextures();
     let texturesArray: Array<PIXI.Texture[]> = textures.getArray();
@@ -75,28 +109,36 @@ export class FoodHunter {
     let left = this.keyboard(37), right = this.keyboard(39);
 
     left.press = () => {
-      this.hero.runLeft();
-      this.hero.vx = -5;
-      this.hero.vy = 0;
+      if(this.hero) {
+        this.hero.runLeft();
+        this.hero.vx = -5;
+        this.hero.vy = 0;
+      }
     }
 
     left.release = () => {
-      if(!right.isDown && this.hero.vy === 0) {
-        this.hero.idle();
-        this.hero.vx = 0;
+      if(this.hero) {
+        if(!right.isDown && this.hero.vy === 0) {
+          this.hero.idle();
+          this.hero.vx = 0;
+        }
       }
     }
 
     right.press = () => {
-      this.hero.runRight();
-      this.hero.vx = 5;
-      this.hero.vy = 0;
+      if(this.hero) {
+        this.hero.runRight();
+        this.hero.vx = 5;
+        this.hero.vy = 0;
+      }
     }
 
     right.release = () => {
-      if(!left.isDown && this.hero.vy === 0) {
-        this.hero.idle();
-        this.hero.vx = 0;
+      if(this.hero) {
+        if(!left.isDown && this.hero.vy === 0) {
+          this.hero.idle();
+          this.hero.vx = 0;
+        }
       }
     }
   }
@@ -106,10 +148,26 @@ export class FoodHunter {
   }
 
   private play(delta: number): void {
-    this.hero.x += this.hero.vx;
-    this.hero.y += this.hero.vy;
+    if(this.hero) {
+      this.hero.advance();
+      this.contain(this.hero, this.app.screen);
+    }
 
-    this.contain(this.hero, this.app.screen);
+    if(this.food) {
+      this.food.advance();
+      this.food.fallingFoods.forEach(
+        (sprite) => {
+          let collision: string | undefined = this.contain(
+            sprite,
+            this.app.screen
+          );
+          if(this.food && collision === "bottom") {
+            this.food.removeChild(sprite);
+            this.food.removeFallingFood(sprite);
+          }
+        }
+      );
+    }
   }
 
   private keyboard(keyCode: number): Key {
@@ -152,6 +210,6 @@ export class FoodHunter {
     }
 
     return collision;
-}
+  }
 
 }
