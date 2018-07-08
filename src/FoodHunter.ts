@@ -13,7 +13,9 @@ export class FoodHunter {
   healthBar: HealthBar;
   scoreBar: ScoreBar;
   hero?: Hero;
+  heroLocation: string = "graphics/hero/Hero.json";
   food?: Food;
+  foodLocation: string = "graphics/FreePixelFood/Food.json";
 
   updateState: (delta: number) => void = this.play;
 
@@ -31,6 +33,13 @@ export class FoodHunter {
 
     this.scoreBar = new ScoreBar()
     this.gameScene.addChild(this.scoreBar);
+
+    this.app.loader.load(
+      (): void => {
+        this.loadFood();
+        this.loadHero();
+      }
+    )
   }
 
   startGameLoop(): void {
@@ -63,7 +72,8 @@ export class FoodHunter {
     document.body.appendChild(this.app.view);
 
     this.app.renderer.backgroundColor = 0xFFFFFF;
-    }
+
+  }
 
   private constructGameOverScene(): void {
     let message: PIXI.Text = new PIXI.Text("Game Over");
@@ -75,66 +85,76 @@ export class FoodHunter {
   }
 
   private constructHero(): void {
-    this.hero = new Hero(this.loadHeroTextures());
-    this.hero.play();
-    this.hero.y = this.app.view.height - this.hero.height;
-    this.gameScene.addChild(this.hero);
-    this.assignMovementKeysToHero();
+    this.app.loader.add(this.heroLocation);
+  }
+
+  private loadHero(): void {
+    let heroTextures: HeroTextures = new HeroTextures();
+    let textures: PIXI.loaders.TextureDictionary | undefined =
+    this.app.loader.resources[this.heroLocation].textures;
+    if(textures) {
+      heroTextures = this.createHeroTextures(textures);
+      this.hero = new Hero(heroTextures);
+      this.gameScene.addChild(this.hero);
+      this.hero.y = this.app.view.height - this.hero.height;
+      this.assignMovementKeysToHero();
+    }
   }
 
   private constructFood(): void {
-    let foodLocation = "graphics/FreePixelFood/Food.json";
-    this.app.loader.add(foodLocation).load(
-      () => {
-        let textures: PIXI.loaders.TextureDictionary | undefined =
-        this.app.loader.resources[foodLocation].textures;
-        if(textures) {
-          this.food = new Food(textures);
-        }
-        if(this.food) {
-          this.gameScene.addChild(this.food);
-        }
-      }
-    );
-}
+    this.app.loader.add(this.foodLocation);
+  }
 
-  private loadTextures(
-    location: string,
+  private loadFood(): void {
+    let textures: PIXI.loaders.TextureDictionary | undefined =
+    this.app.loader.resources[this.foodLocation].textures;
+    if(textures) {
+      this.food = new Food(textures);
+    }
+    if(this.food) {
+      this.gameScene.addChild(this.food);
+    }
+  }
+
+  private loadFrames(
+    textures: PIXI.loaders.TextureDictionary,
     frameName: string,
-    frames: number,
-    suffix: string): PIXI.Texture[] {
-      let textures: PIXI.Texture[] = [];
-      for(let frameNumber: number = 0; frameNumber < frames; ++frameNumber) {
-        let image = location + frameName + frameNumber + suffix;
-        textures.push(PIXI.Texture.fromImage(image));
-      }
-
-      return textures;
+    frameCount: number,
+    suffix: string
+  ): PIXI.Texture[] {
+    let frames: PIXI.Texture[] = [];
+    for(let frameNumber: number = 0; frameNumber < frameCount; ++frameNumber) {
+      let key: string = frameName + frameNumber + suffix;
+      frames.push(textures[key]);
     }
 
-  private loadHeroTextures(): HeroTextures {
-    let imageLocation: string = "graphics/hero/";
-    let imageSufix: string = ".png";
-    let imageFrames: { frameName: string, frames: number }[] = [
-      { frameName: "knight iso char_idle_", frames: 4 },
-      { frameName: "knight iso char_run left_", frames: 6 },
-      { frameName: "knight iso char_run right_", frames: 6 },
-      { frameName: "knight iso char_slice left_", frames: 3 },
-      { frameName: "knight iso char_slice right_", frames: 3 },
-      { frameName: "knight iso char_slice up_", frames: 3 }
+    return frames;
+  }
+
+  private createHeroTextures(
+    textures: PIXI.loaders.TextureDictionary
+  ): HeroTextures {
+    let imageFrames: { frameName: string, frameCount: number }[] = [
+      { frameName: "knight iso char_idle_", frameCount: 4 },
+      { frameName: "knight iso char_run left_", frameCount: 6 },
+      { frameName: "knight iso char_run right_", frameCount: 6 },
+      { frameName: "knight iso char_slice left_", frameCount: 3 },
+      { frameName: "knight iso char_slice right_", frameCount: 3 },
+      { frameName: "knight iso char_slice up_", frameCount: 3 }
     ]
-    let textures: HeroTextures = new HeroTextures();
-    let texturesArray: Array<PIXI.Texture[]> = textures.getArray();
+    let suffix: string = ".png";
+    let heroTextures: HeroTextures = new HeroTextures();
+    let texturesArray: Array<PIXI.Texture[]> = heroTextures.getArray();
     for(let index: number = 0; index < texturesArray.length; index++) {
-      texturesArray[index] = this.loadTextures(
-        imageLocation,
+      texturesArray[index] = this.loadFrames(
+        textures,
         imageFrames[index].frameName,
-        imageFrames[index].frames,
-        imageSufix
+        imageFrames[index].frameCount,
+        suffix
       );
     }
-    textures.setArray(texturesArray);
-    return textures;
+    heroTextures.setArray(texturesArray);
+    return heroTextures;
   }
 
   private assignMovementKeysToHero(): void {
@@ -293,34 +313,34 @@ export class FoodHunter {
   private hitTestSprite(
     r1: PIXI.Sprite,
     r2: PIXI.Sprite):  boolean {
-    let hit: boolean = false;
+      let hit: boolean = false;
 
-    let r1centerX: number = r1.x + r1.width / 2;
-    let r1centerY: number = r1.y + r1.height / 2;
-    let r2centerX: number = r2.x + r2.width / 2;
-    let r2centerY: number = r2.y + r2.height / 2;
+      let r1centerX: number = r1.x + r1.width / 2;
+      let r1centerY: number = r1.y + r1.height / 2;
+      let r2centerX: number = r2.x + r2.width / 2;
+      let r2centerY: number = r2.y + r2.height / 2;
 
-    let r1halfWidth: number = r1.width / 2;
-    let r1halfHeight: number = r1.height / 2;
-    let r2halfWidth: number = r2.width / 2;
-    let r2halfHeight: number = r2.height / 2;
+      let r1halfWidth: number = r1.width / 2;
+      let r1halfHeight: number = r1.height / 2;
+      let r2halfWidth: number = r2.width / 2;
+      let r2halfHeight: number = r2.height / 2;
 
-    let vx: number = r1centerX - r2centerX;
-    let vy: number = r1centerY - r2centerY;
+      let vx: number = r1centerX - r2centerX;
+      let vy: number = r1centerY - r2centerY;
 
-    let combinedHalfWidths: number = r1halfWidth + r2halfWidth;
-    let combinedHalfHeights: number = r1halfHeight + r2halfHeight;
+      let combinedHalfWidths: number = r1halfWidth + r2halfWidth;
+      let combinedHalfHeights: number = r1halfHeight + r2halfHeight;
 
-    if (Math.abs(vx) < combinedHalfWidths) {
-      if (Math.abs(vy) < combinedHalfHeights) {
-        hit = true;
+      if (Math.abs(vx) < combinedHalfWidths) {
+        if (Math.abs(vy) < combinedHalfHeights) {
+          hit = true;
+        } else {
+          hit = false;
+        }
       } else {
         hit = false;
       }
-    } else {
-      hit = false;
-    }
 
-    return hit;
+      return hit;
+    }
   }
-}
