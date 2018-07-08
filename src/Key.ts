@@ -9,8 +9,8 @@ export class Key {
       this.code = keyCode;
       this.isDown = false;
       this.isUp = true;
-      this.press = () => {}
-      this.release = () => {}
+      this.press = (): void => {}
+      this.release = (): void => {}
     }
 
     downHandler(event: KeyboardEvent): void {

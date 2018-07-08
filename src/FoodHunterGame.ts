@@ -6,40 +6,27 @@ import { Food } from './Food';
 import { HealthBar } from './HealthBar';
 import { ScoreBar } from './ScoreBar';
 
-export class FoodHunter {
+export class FoodHunterGame {
   app!: PIXI.Application;
   gameScene: PIXI.Container = new PIXI.Container();
   gameOverScene: PIXI.Container = new PIXI.Container();
-  healthBar: HealthBar;
-  scoreBar: ScoreBar;
-  hero?: Hero;
-  heroLocation: string = "graphics/hero/Hero.json";
   food?: Food;
-  foodLocation: string = "graphics/FreePixelFood/Food.json";
+  hero?: Hero;
+  heroTilesetLocation: string = "graphics/hero/Hero.json";
+  foodTilesetLocation: string = "graphics/FreePixelFood/Food.json";
+  healthBar!: HealthBar;
+  scoreBar!: ScoreBar;
 
   updateState: (delta: number) => void = this.play;
 
   constructor() {
     this.constructApplication();
     this.constructGameOverScene();
-    this.constructFood();
-    this.constructHero();
-    this.healthBar = new HealthBar(
-      this.app.view.width / 4,
-      this.app.view.height / 20
-    )
-    this.healthBar.position.set(this.app.view.width - this.healthBar.width, 0);
-    this.gameScene.addChild(this.healthBar);
-
-    this.scoreBar = new ScoreBar()
-    this.gameScene.addChild(this.scoreBar);
-
-    this.app.loader.load(
-      (): void => {
-        this.loadFood();
-        this.loadHero();
-      }
-    )
+    this.loadFoodTextures();
+    this.loadHeroTextures();
+    this.constructHealthBar();
+    this.constructScoreBar();
+    this.constructHeroAndFood();
   }
 
   startGameLoop(): void {
@@ -72,42 +59,51 @@ export class FoodHunter {
     document.body.appendChild(this.app.view);
 
     this.app.renderer.backgroundColor = 0xFFFFFF;
-
   }
 
   private constructGameOverScene(): void {
     let message: PIXI.Text = new PIXI.Text("Game Over");
     message.position.set(
-      this.app.view.width / 2 - message.width / 2,
-      this.app.view.height / 2 - message.height / 2,
+      (this.app.view.width - message.width) / 2,
+      (this.app.view.height - message.height) / 2,
     )
     this.gameOverScene.addChild(message);
   }
 
-  private constructHero(): void {
-    this.app.loader.add(this.heroLocation);
+  private loadFoodTextures(): void {
+    this.app.loader.add(this.foodTilesetLocation);
   }
 
-  private loadHero(): void {
-    let heroTextures: HeroTextures = new HeroTextures();
-    let textures: PIXI.loaders.TextureDictionary | undefined =
-    this.app.loader.resources[this.heroLocation].textures;
-    if(textures) {
-      heroTextures = this.createHeroTextures(textures);
-      this.hero = new Hero(heroTextures);
-      this.gameScene.addChild(this.hero);
-      this.hero.y = this.app.view.height - this.hero.height;
-      this.assignMovementKeysToHero();
-    }
+  private loadHeroTextures(): void {
+    this.app.loader.add(this.heroTilesetLocation);
+  }
+
+  private constructHealthBar(): void {
+    this.healthBar = new HealthBar(
+      this.app.view.width / 4,
+      this.app.view.height / 20
+    )
+    this.healthBar.position.set(this.app.view.width - this.healthBar.width, 0);
+    this.gameScene.addChild(this.healthBar);
+  }
+
+  private constructScoreBar(): void {
+    this.scoreBar = new ScoreBar()
+    this.gameScene.addChild(this.scoreBar);
+  }
+
+  private constructHeroAndFood(): void {
+    this.app.loader.load(
+      (): void => {
+        this.constructFood();
+        this.constructHero();
+      }
+    )
   }
 
   private constructFood(): void {
-    this.app.loader.add(this.foodLocation);
-  }
-
-  private loadFood(): void {
     let textures: PIXI.loaders.TextureDictionary | undefined =
-    this.app.loader.resources[this.foodLocation].textures;
+    this.app.loader.resources[this.foodTilesetLocation].textures;
     if(textures) {
       this.food = new Food(textures);
     }
@@ -116,19 +112,15 @@ export class FoodHunter {
     }
   }
 
-  private loadFrames(
-    textures: PIXI.loaders.TextureDictionary,
-    frameName: string,
-    frameCount: number,
-    suffix: string
-  ): PIXI.Texture[] {
-    let frames: PIXI.Texture[] = [];
-    for(let frameNumber: number = 0; frameNumber < frameCount; ++frameNumber) {
-      let key: string = frameName + frameNumber + suffix;
-      frames.push(textures[key]);
+  private constructHero(): void {
+    let textures: PIXI.loaders.TextureDictionary | undefined =
+    this.app.loader.resources[this.heroTilesetLocation].textures;
+    if(textures) {
+      this.hero = new Hero(this.createHeroTextures(textures));
+      this.gameScene.addChild(this.hero);
+      this.hero.y = this.app.view.height - this.hero.height;
+      this.assignMovementKeysToHero();
     }
-
-    return frames;
   }
 
   private createHeroTextures(
@@ -142,33 +134,48 @@ export class FoodHunter {
       { frameName: "knight iso char_slice right_", frameCount: 3 },
       { frameName: "knight iso char_slice up_", frameCount: 3 }
     ]
-    let suffix: string = ".png";
+    let nameSuffix: string = ".png";
     let heroTextures: HeroTextures = new HeroTextures();
-    let texturesArray: Array<PIXI.Texture[]> = heroTextures.getArray();
-    for(let index: number = 0; index < texturesArray.length; index++) {
-      texturesArray[index] = this.loadFrames(
+    let heroTexturesAsArray: Array<PIXI.Texture[]> = heroTextures.getArray();
+    for(let index: number = 0; index < heroTexturesAsArray.length; index++) {
+      heroTexturesAsArray[index] = this.loadFrames(
         textures,
         imageFrames[index].frameName,
         imageFrames[index].frameCount,
-        suffix
+        nameSuffix
       );
     }
-    heroTextures.setArray(texturesArray);
+    heroTextures.setArray(heroTexturesAsArray);
     return heroTextures;
+  }
+
+  private loadFrames(
+    textures: PIXI.loaders.TextureDictionary,
+    frameName: string,
+    frameCount: number,
+    nameSuffix: string
+  ): PIXI.Texture[] {
+    let frames: PIXI.Texture[] = [];
+    for(let frameNumber: number = 0; frameNumber < frameCount; ++frameNumber) {
+      let key: string = frameName + frameNumber + nameSuffix;
+      frames.push(textures[key]);
+    }
+
+    return frames;
   }
 
   private assignMovementKeysToHero(): void {
     let left = this.keyboard(37), right = this.keyboard(39);
 
-    left.press = () => {
+    left.press = (): void => {
       if(this.hero) {
         this.hero.runLeft();
-        this.hero.vx = -5;
+        this.hero.vx = -this.hero.movementSpeed;
         this.hero.vy = 0;
       }
     }
 
-    left.release = () => {
+    left.release = (): void => {
       if(this.hero) {
         if(!right.isDown && this.hero.vy === 0) {
           this.hero.idle();
@@ -177,15 +184,15 @@ export class FoodHunter {
       }
     }
 
-    right.press = () => {
+    right.press = (): void => {
       if(this.hero) {
         this.hero.runRight();
-        this.hero.vx = 5;
+        this.hero.vx = this.hero.movementSpeed;
         this.hero.vy = 0;
       }
     }
 
-    right.release = () => {
+    right.release = (): void => {
       if(this.hero) {
         if(!left.isDown && this.hero.vy === 0) {
           this.hero.idle();
@@ -229,8 +236,7 @@ export class FoodHunter {
       this.app.screen
     );
     if(this.food && collision === "bottom") {
-      this.food.removeChild(concreteFood);
-      this.food.removeConcreteFood(concreteFood);
+      this.food.removeFromFallingFood(concreteFood);
       this.healthBar.decreaseHealth();
       if(this.healthBar.healthLeft === 0) {
         this.app.stage = this.gameOverScene;
@@ -243,18 +249,17 @@ export class FoodHunter {
     if(this.food) {
       this.food.fallingFoods.forEach(
         (concreteFood: PIXI.Sprite): void => {
-          this.handlConcreteFoodHeroCollisions(concreteFood);
+          this.handleConcreteFoodHeroCollision(concreteFood);
         }
       );
     }
   }
 
-  private handlConcreteFoodHeroCollisions(concreteFood: PIXI.Sprite): void {
+  private handleConcreteFoodHeroCollision(concreteFood: PIXI.Sprite): void {
     if(this.hero) {
       if(this.hitTestSprite(this.hero, concreteFood)) {
         if(this.food) {
-          this.food.removeChild(concreteFood);
-          this.food.removeConcreteFood(concreteFood);
+          this.food.removeFromFallingFood(concreteFood);
           if(concreteFood.y < this.hero.getHeadY() && this.hero.vx === 0) {
             this.hero.sliceUp();
           } else if(concreteFood.x < this.hero.x + (this.hero.width / 2)) {

@@ -2,7 +2,8 @@ import * as PIXI from 'pixi.js';
 import { HeroTextures } from './HeroTextures';
 
 export class Hero extends PIXI.extras.AnimatedSprite {
-  animationSpeed = 0.15;
+  animationSpeed: number = 0.15;
+  movementSpeed: number = 5;
   vx: number = 0;
   vy: number = 0;
 

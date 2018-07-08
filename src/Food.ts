@@ -2,6 +2,7 @@ export class Food extends PIXI.particles.ParticleContainer {
   textures: PIXI.loaders.TextureDictionary;
   textureCount: number;
   fallingFoods: PIXI.Sprite[];
+  movementSpeed: number = 3;
 
   constructor(textures: PIXI.loaders.TextureDictionary) {
     super();
@@ -12,7 +13,7 @@ export class Food extends PIXI.particles.ParticleContainer {
 
   advance(): void {
     this.fallingFoods.forEach((sprite) => {
-      sprite.y += 3;
+      sprite.y += this.movementSpeed;
     })
   }
 
@@ -36,11 +37,9 @@ export class Food extends PIXI.particles.ParticleContainer {
     return randomTexture;
   }
 
-  removeConcreteFood(sprite: PIXI.Sprite): void {
-    let index = this.fallingFoods.indexOf(sprite);
-    if(index > -1) {
-      this.fallingFoods.splice(index, 1);
-    }
+  removeFromFallingFood(concreteFood: PIXI.Sprite): void {
+    this.removeChild(concreteFood);
+    this.removeConcreteFoodSprite(concreteFood);
   }
 
   getTextureCount(): number {
@@ -49,5 +48,12 @@ export class Food extends PIXI.particles.ParticleContainer {
       textureCount++;
     }
     return textureCount;
+  }
+
+  private removeConcreteFoodSprite(sprite: PIXI.Sprite): void {
+    let index = this.fallingFoods.indexOf(sprite);
+    if(index > -1) {
+      this.fallingFoods.splice(index, 1);
+    }
   }
 }

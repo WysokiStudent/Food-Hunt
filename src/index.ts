@@ -1,4 +1,4 @@
-import { FoodHunter } from './FoodHunter';
+import { FoodHunterGame } from './FoodHunterGame';
 
-let game: FoodHunter = new FoodHunter();
+let game: FoodHunterGame = new FoodHunterGame();
 game.startGameLoop();
