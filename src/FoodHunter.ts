@@ -180,56 +180,72 @@ export class FoodHunter {
   }
 
   private play(delta: number): void {
+    this.advanceHero();
+    this.advanceFood();
+    this.handleFoodHeroCollisions();
+  }
+
+  private advanceHero(): void {
     if(this.hero) {
       this.hero.advance();
       this.contain(this.hero, this.app.screen);
     }
+  }
 
+  private advanceFood(): void {
     if(this.food) {
       this.food.advance();
       this.food.fallingFoods.forEach(
-        (concreteFood) => {
-          let collision: string | undefined = this.contain(
-            concreteFood,
-            this.app.screen
-          );
-          if(this.food && collision === "bottom") {
-            this.food.removeChild(concreteFood);
-            this.food.removeConcreteFood(concreteFood);
-            this.healthBar.decreaseHealth();
-            if(this.healthBar.healthLeft === 0) {
-              this.app.stage = this.gameOverScene;
-              this.stopGameLoop();
-            }
-          }
+        (concreteFood: PIXI.Sprite): void => {
+          this.handleFallingFood(concreteFood);
         }
       );
     }
+  }
 
+  private handleFallingFood(concreteFood: PIXI.Sprite): void {
+    let collision: string | undefined = this.contain(
+      concreteFood,
+      this.app.screen
+    );
+    if(this.food && collision === "bottom") {
+      this.food.removeChild(concreteFood);
+      this.food.removeConcreteFood(concreteFood);
+      this.healthBar.decreaseHealth();
+      if(this.healthBar.healthLeft === 0) {
+        this.app.stage = this.gameOverScene;
+        this.stopGameLoop();
+      }
+    }
+  }
+
+  private handleFoodHeroCollisions(): void {
     if(this.food) {
       this.food.fallingFoods.forEach(
-        (concreteFood) => {
-          if(this.hero) {
-            if(this.hitTestSprite(this.hero, concreteFood)) {
-              if(this.food) {
-                this.food.removeChild(concreteFood);
-                this.food.removeConcreteFood(concreteFood);
-                if(concreteFood.y < this.hero.y + (this.hero.height / 8) &&
-                  this.hero.vx === 0) {
-                  this.hero.sliceUp();
-                } else if(concreteFood.x < this.hero.x + (this.hero.width / 2)) {
-                  this.hero.sliceLeft();
-                } else {
-                  this.hero.sliceRight();
-                }
-                this.scoreBar.increaseScore();
-              }
-            }
-          }
+        (concreteFood: PIXI.Sprite): void => {
+          this.handlConcreteFoodHeroCollisions(concreteFood);
         }
-      )
+      );
     }
+  }
 
+  private handlConcreteFoodHeroCollisions(concreteFood: PIXI.Sprite): void {
+    if(this.hero) {
+      if(this.hitTestSprite(this.hero, concreteFood)) {
+        if(this.food) {
+          this.food.removeChild(concreteFood);
+          this.food.removeConcreteFood(concreteFood);
+          if(concreteFood.y < this.hero.getHeadY() && this.hero.vx === 0) {
+            this.hero.sliceUp();
+          } else if(concreteFood.x < this.hero.x + (this.hero.width / 2)) {
+            this.hero.sliceLeft();
+          } else {
+            this.hero.sliceRight();
+          }
+          this.scoreBar.increaseScore();
+        }
+      }
+    }
   }
 
   private keyboard(keyCode: number): Key {

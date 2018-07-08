@@ -7,6 +7,7 @@ export class Hero extends PIXI.extras.AnimatedSprite {
   vy: number = 0;
 
   heroTextures: HeroTextures;
+  headToBodyRatio: number = 1/8;
 
   constructor(heroTextures: HeroTextures) {
     super(heroTextures.idle);
@@ -48,6 +49,10 @@ export class Hero extends PIXI.extras.AnimatedSprite {
   advance(): void {
     this.x += this.vx;
     this.y += this.vy;
+  }
+
+  getHeadY(): number {
+    return this.y + this.height * this.headToBodyRatio;
   }
 
   private changeTexture(textures: PIXI.Texture[]): void {
