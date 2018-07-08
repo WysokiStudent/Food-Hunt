@@ -4,15 +4,14 @@ import { HeroTextures } from './HeroTextures';
 import { Key } from './Key';
 import { Food } from './Food';
 import { HealthBar } from './HealthBar';
+import { ScoreBar } from './ScoreBar';
 
 export class FoodHunter {
   app!: PIXI.Application;
   healthBar: HealthBar;
+  scoreBar: ScoreBar;
   hero?: Hero;
   food?: Food;
-
-  score: number = 0;
-  lives: number = 10;
 
   updateState: (delta: number) => void = this.play;
 
@@ -24,7 +23,11 @@ export class FoodHunter {
       this.app.view.width / 4,
       this.app.view.height / 20
     )
+    this.healthBar.position.set(this.app.view.width - this.healthBar.width, 0);
     this.app.stage.addChild(this.healthBar);
+
+    this.scoreBar = new ScoreBar()
+    this.app.stage.addChild(this.scoreBar);
   }
 
   startGameLoop(): void {
@@ -195,6 +198,7 @@ export class FoodHunter {
                 this.food.removeChild(concreteFood);
                 this.food.removeConcreteFood(concreteFood);
                 this.hero.sliceUp();
+                this.scoreBar.increaseScore();
               }
             }
           }
